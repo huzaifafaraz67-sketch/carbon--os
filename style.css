@@ -1,0 +1,248 @@
+/* ==========================================================================
+   CARBON OS CORE SYSTEM STYLESHEET
+   ========================================================================== */
+
+/* Root Variables & Color Tokens */
+:root {
+  --carbon-bg-dark: #0a0c10;
+  --carbon-panel-bg: rgba(15, 23, 42, 0.75);
+  --carbon-border: rgba(255, 255, 255, 0.12);
+  --carbon-accent: #6366f1;
+  --carbon-accent-hover: #4f46e5;
+  --carbon-text-main: #f8fafc;
+  --carbon-text-muted: #94a3b8;
+  --carbon-window-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --carbon-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Global Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+body {
+  font-family: var(--carbon-font-family);
+  background-color: var(--carbon-bg-dark);
+  color: var(--carbon-text-main);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* ==========================================================================
+   1. DESKTOP CANVAS & SHORTCUTS
+   ========================================================================== */
+#desktop {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #090d16 100%);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.desktop-shortcut {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.desktop-shortcut:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--carbon-border);
+  backdrop-filter: blur(8px);
+}
+
+.desktop-shortcut:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   2. WINDOW MANAGER & GLASSMORPHISM
+   ========================================================================== */
+.carbon-window {
+  position: absolute;
+  min-width: 320px;
+  min-height: 200px;
+  background: var(--carbon-panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--carbon-border);
+  border-radius: 12px;
+  box-shadow: var(--carbon-window-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.carbon-window.active {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.carbon-window.minimized {
+  opacity: 0;
+  transform: translateY(100px) scale(0.8);
+  pointer-events: none;
+}
+
+/* Window Header Bar */
+.window-header {
+  height: 38px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--carbon-border);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: move;
+}
+
+.window-title {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--carbon-text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.window-control-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  transition: opacity 0.15s ease;
+}
+
+.window-control-btn:hover {
+  opacity: 0.8;
+}
+
+.btn-close { background-color: #ef4444; }
+.btn-minimize { background-color: #f59e0b; }
+.btn-maximize { background-color: #10b981; }
+
+/* Window Body Content Area */
+.window-body {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background: rgba(10, 12, 16, 0.4);
+}
+
+/* ==========================================================================
+   3. TASKBAR & START MENU
+   ========================================================================== */
+#taskbar {
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--carbon-border);
+}
+
+#start-menu {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--carbon-border);
+}
+
+.taskbar-app-icon {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.taskbar-app-icon.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: var(--carbon-accent);
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   4. SYSTEM UTILITIES & APP SPECIFIC STYLES
+   ========================================================================== */
+
+/* Terminal Display */
+.terminal-window {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #050505;
+  color: #22c55e;
+}
+
+.terminal-input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+
+/* Calculator Grid */
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--carbon-border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--carbon-text-main);
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.calc-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.calc-btn.accent {
+  background: var(--carbon-accent);
+}
+
+.calc-btn.accent:hover {
+  background: var(--carbon-accent-hover);
+}
