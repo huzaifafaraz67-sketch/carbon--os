@@ -3,229 +3,499 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carbon OS - Web Desktop Environment</title>
-  
-  <!-- External Libraries from /lib/ -->
+  <title>Carbon OS</title>
+
+  <!-- Local Stylesheets from lib/ -->
   <link rel="stylesheet" href="lib/bootstrap.min.css">
   <link rel="stylesheet" href="lib/tailwind.min.css">
   <link rel="stylesheet" href="lib/animate.min.css">
-  <link rel="stylesheet" href="lib/fontawesome.min.css">
-  
-  <!-- Carbon OS Master Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* SYSTEM CORE STYLES */
+    :root {
+      --carbon-bg-dark: #0a0c10;
+      --carbon-panel-bg: rgba(15, 23, 42, 0.88);
+      --carbon-border: rgba(255, 255, 255, 0.12);
+      --carbon-accent: #6366f1;
+      --carbon-text-main: #f8fafc;
+      --carbon-window-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--carbon-bg-dark); color: var(--carbon-text-main); overflow: hidden; height: 100vh; width: 100vw; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+    #desktop {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #090d16 100%);
+      background-size: cover; background-position: center; position: relative; overflow: hidden;
+    }
+
+    .desktop-shortcut { transition: all 0.2s ease; border: 1px solid transparent; }
+    .desktop-shortcut:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--carbon-border); backdrop-filter: blur(8px); }
+
+    .carbon-window {
+      position: absolute; min-width: 320px; min-height: 220px;
+      background: var(--carbon-panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--carbon-border); border-radius: 12px; box-shadow: var(--carbon-window-shadow);
+      display: flex; flex-direction: column; overflow: hidden; pointer-events: auto;
+    }
+    .carbon-window.active { border-color: rgba(99, 102, 241, 0.5); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 15px rgba(99, 102, 241, 0.2); }
+    .carbon-window.minimized { opacity: 0; transform: translateY(100px) scale(0.8); pointer-events: none; }
+
+    .window-header { height: 38px; background: rgba(0, 0, 0, 0.4); border-bottom: 1px solid var(--carbon-border); padding: 0 12px; display: flex; align-items: center; justify-content: space-between; cursor: move; }
+    .window-controls { display: flex; align-items: center; gap: 6px; }
+    .window-control-btn { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; }
+    .btn-close { background-color: #ef4444; } .btn-minimize { background-color: #f59e0b; } .btn-maximize { background-color: #10b981; }
+
+    .window-body { flex: 1; overflow: auto; position: relative; background: rgba(10, 12, 16, 0.4); }
+
+    #taskbar { background: rgba(10, 12, 16, 0.88); backdrop-filter: blur(20px); border-top: 1px solid var(--carbon-border); }
+    #start-menu { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(24px); border: 1px solid var(--carbon-border); }
+
+    /* Pure CSS Icon Shapes */
+    .icon-box { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .icon-sm { width: 28px; height: 28px; border-radius: 8px; font-size: 10px; }
+    .bg-files { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .bg-notepad { background: linear-gradient(135deg, #059669, #047857); }
+    .bg-calc { background: linear-gradient(135deg, #d97706, #b45309); }
+    .bg-term { background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid #374151; color: #10b981; }
+    .bg-settings { background: linear-gradient(135deg, #4f46e5, #4338ca); }
+
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .calc-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--carbon-border); border-radius: 8px; padding: 12px; color: #fff; font-weight: 600; }
+    .calc-btn:hover { background: rgba(255, 255, 255, 0.15); }
+    .calc-btn.accent { background: var(--carbon-accent); }
+  </style>
 </head>
-<body class="select-none overflow-hidden h-screen w-screen bg-gray-900 text-gray-100 font-sans">
+<body class="select-none overflow-hidden h-screen w-screen bg-black">
 
   <!-- ========================================== -->
-  <!-- 1. DESKTOP CANVAS & WORKSPACE              -->
+  <!-- 0. BOOT SCREEN                             -->
   <!-- ========================================== -->
-  <div id="desktop" class="relative w-full h-full overflow-hidden bg-cover bg-center transition-all duration-500">
-    
-    <!-- Desktop Grid Icons -->
-    <div id="desktop-grid" class="p-4 grid grid-flow-col grid-rows-6 gap-4 w-max h-full">
-      
-      <!-- Calculator Launcher -->
-      <div class="desktop-icon group flex flex-col items-center justify-center p-3 rounded-xl w-24 h-24 hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/20" onclick="CarbonOS.openApp('calculator')">
-        <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h6M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        </div>
-        <span class="text-xs text-white font-medium mt-2 drop-shadow-md tracking-wide">Calculator</span>
+  <div id="boot-screen" class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-1000">
+    <div class="flex flex-col items-center animate__animated animate__fadeIn">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-3xl font-extrabold text-white mb-4 shadow-2xl">
+        C
       </div>
-
-      <!-- Text Editor Launcher -->
-      <div class="desktop-icon group flex flex-col items-center justify-center p-3 rounded-xl w-24 h-24 hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/20" onclick="CarbonOS.openApp('texteditor')">
-        <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-lg group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-        </div>
-        <span class="text-xs text-white font-medium mt-2 drop-shadow-md tracking-wide">Notes</span>
+      <h1 class="text-xl font-bold tracking-widest text-white mb-2">CARBON OS</h1>
+      <div class="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div id="boot-progress" class="h-full bg-indigo-500 w-0 transition-all duration-1000 ease-out"></div>
       </div>
-
-      <!-- Terminal Launcher -->
-      <div class="desktop-icon group flex flex-col items-center justify-center p-3 rounded-xl w-24 h-24 hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/20" onclick="CarbonOS.openApp('terminal')">
-        <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-tr from-gray-800 to-gray-900 border border-gray-700 shadow-lg group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        </div>
-        <span class="text-xs text-white font-medium mt-2 drop-shadow-md tracking-wide">Terminal</span>
-      </div>
-
-      <!-- Settings Launcher -->
-      <div class="desktop-icon group flex flex-col items-center justify-center p-3 rounded-xl w-24 h-24 hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/20" onclick="CarbonOS.openApp('settings')">
-        <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-tr from-purple-600 to-pink-500 shadow-lg group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-        </div>
-        <span class="text-xs text-white font-medium mt-2 drop-shadow-md tracking-wide">Settings</span>
-      </div>
-
-      <!-- File Manager Launcher -->
-      <div class="desktop-icon group flex flex-col items-center justify-center p-3 rounded-xl w-24 h-24 hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/20" onclick="CarbonOS.openApp('files')">
-        <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 to-orange-400 shadow-lg group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-        </div>
-        <span class="text-xs text-white font-medium mt-2 drop-shadow-md tracking-wide">Files</span>
-      </div>
-
+      <p class="text-xs text-gray-500 mt-4 tracking-wider">LOADING LOCAL LIBRARIES...</p>
     </div>
-
-    <!-- Dynamic App Windows Container -->
-    <div id="windows-container" class="absolute inset-0 pointer-events-none">
-      
-      <!-- CALCULATOR WINDOW TEMPLATE -->
-      <div id="window-calculator" class="carbon-window absolute hidden pointer-events-auto w-80 bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden" style="top: 100px; left: 150px; z-index: 10;">
-        <div class="window-header flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10 cursor-move">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h6M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span class="text-xs font-semibold text-gray-200 tracking-wider">Calculator</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="CarbonOS.minimizeApp('calculator')" class="w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.maximizeApp('calculator')" class="w-3 h-3 rounded-full bg-green-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.closeApp('calculator')" class="w-3 h-3 rounded-full bg-red-500 hover:opacity-80 transition-opacity"></button>
-          </div>
-        </div>
-        <div class="window-body p-4">
-          <div id="calc-display" class="w-full h-14 bg-black/40 rounded-xl p-3 text-right text-2xl font-mono text-white overflow-x-auto border border-white/5 mb-4">0</div>
-          <div class="grid grid-cols-4 gap-2">
-            <button class="calc-btn text-red-400 bg-white/5 hover:bg-white/10" onclick="Calc.clear()">C</button>
-            <button class="calc-btn text-blue-400 bg-white/5 hover:bg-white/10" onclick="Calc.press('(')">(</button>
-            <button class="calc-btn text-blue-400 bg-white/5 hover:bg-white/10" onclick="Calc.press(')')">)</button>
-            <button class="calc-btn text-amber-400 bg-white/5 hover:bg-white/10" onclick="Calc.press('/')">/</button>
-
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('7')">7</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('8')">8</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('9')">9</button>
-            <button class="calc-btn text-amber-400 bg-white/5 hover:bg-white/10" onclick="Calc.press('*')">*</button>
-
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('4')">4</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('5')">5</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('6')">6</button>
-            <button class="calc-btn text-amber-400 bg-white/5 hover:bg-white/10" onclick="Calc.press('-')">-</button>
-
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('1')">1</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('2')">2</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('3')">3</button>
-            <button class="calc-btn text-amber-400 bg-white/5 hover:bg-white/10" onclick="Calc.press('+')">+</button>
-
-            <button class="calc-btn col-span-2 bg-white/5 hover:bg-white/10" onclick="Calc.press('0')">0</button>
-            <button class="calc-btn bg-white/5 hover:bg-white/10" onclick="Calc.press('.')">.</button>
-            <button class="calc-btn bg-blue-600 hover:bg-blue-500 text-white font-bold" onclick="Calc.calculate()">=</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TEXT EDITOR WINDOW TEMPLATE -->
-      <div id="window-texteditor" class="carbon-window absolute hidden pointer-events-auto w-[500px] h-[380px] bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden" style="top: 140px; left: 320px; z-index: 10;">
-        <div class="window-header flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10 cursor-move">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            <span class="text-xs font-semibold text-gray-200 tracking-wider">Carbon Notes</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="CarbonOS.minimizeApp('texteditor')" class="w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.maximizeApp('texteditor')" class="w-3 h-3 rounded-full bg-green-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.closeApp('texteditor')" class="w-3 h-3 rounded-full bg-red-500 hover:opacity-80 transition-opacity"></button>
-          </div>
-        </div>
-        <div class="window-body flex flex-col h-[calc(100%-49px)] p-3 space-y-2">
-          <div class="flex items-center space-x-2 pb-2 border-b border-white/10">
-            <input type="text" id="note-filename" value="document.txt" class="bg-black/40 text-xs text-gray-200 px-3 py-1.5 rounded-lg border border-white/10 focus:outline-none focus:border-emerald-500 w-48">
-            <button onclick="TextEditor.save()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded-lg transition-colors font-medium">Save to VFS</button>
-            <button onclick="TextEditor.clear()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 text-xs rounded-lg transition-colors">Clear</button>
-          </div>
-          <textarea id="note-content" class="w-full flex-grow bg-black/30 text-gray-200 p-3 rounded-xl border border-white/5 focus:outline-none font-mono text-sm resize-none" placeholder="Type your text here..."></textarea>
-        </div>
-      </div>
-
-      <!-- TERMINAL WINDOW TEMPLATE -->
-      <div id="window-terminal" class="carbon-window absolute hidden pointer-events-auto w-[550px] h-[340px] bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden" style="top: 200px; left: 220px; z-index: 10;">
-        <div class="window-header flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10 cursor-move">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span class="text-xs font-semibold text-gray-200 tracking-wider">Carbon CLI Terminal</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="CarbonOS.minimizeApp('terminal')" class="w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.maximizeApp('terminal')" class="w-3 h-3 rounded-full bg-green-500 hover:opacity-80 transition-opacity"></button>
-            <button onclick="CarbonOS.closeApp('terminal')" class="w-3 h-3 rounded-full bg-red-500 hover:opacity-80 transition-opacity"></button>
-          </div>
-        </div>
-        <div class="window-body flex flex-col h-[calc(100%-49px)] p-4 font-mono text-xs text-green-400 space-y-2">
-          <div id="terminal-output" class="flex-grow overflow-y-auto space-y-1">
-            <p class="text-gray-400">Carbon OS v1.0.0 Terminal Interface</p>
-            <p class="text-gray-500">Type 'help' to view available system commands.</p>
-          </div>
-          <div class="flex items-center space-x-2 border-t border-white/10 pt-2">
-            <span class="text-emerald-400 font-bold">carbon@user:~$</span>
-            <input type="text" id="terminal-input" class="flex-grow bg-transparent text-green-400 focus:outline-none" autofocus onkeydown="Terminal.handleKey(event)">
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- START MENU OVERLAY -->
-    <div id="start-menu" class="absolute bottom-16 left-4 hidden w-80 bg-gray-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl p-4 z-50 animate__animated animate__fadeInUp animate__faster">
-      <div class="flex items-center space-x-3 pb-3 mb-3 border-b border-white/10">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg">C</div>
-        <div>
-          <h4 class="text-sm font-semibold text-white">Carbon User</h4>
-          <p class="text-xs text-gray-400">Administrator</p>
-        </div>
-      </div>
-      <div class="space-y-1">
-        <button onclick="CarbonOS.openApp('calculator'); CarbonOS.toggleStartMenu();" class="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-white/10 transition-colors">
-          <span class="p-2 rounded-lg bg-blue-500/20 text-blue-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-6 4h6m-6 4h6M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></span>
-          <span class="text-xs font-medium text-gray-200">Calculator</span>
-        </button>
-        <button onclick="CarbonOS.openApp('texteditor'); CarbonOS.toggleStartMenu();" class="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-white/10 transition-colors">
-          <span class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></span>
-          <span class="text-xs font-medium text-gray-200">Notes Editor</span>
-        </button>
-        <button onclick="CarbonOS.openApp('terminal'); CarbonOS.toggleStartMenu();" class="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-white/10 transition-colors">
-          <span class="p-2 rounded-lg bg-gray-500/20 text-gray-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></span>
-          <span class="text-xs font-medium text-gray-200">CLI Terminal</span>
-        </button>
-      </div>
-      <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-        <button onclick="CarbonOS.restart()" class="text-xs text-gray-400 hover:text-white transition-colors flex items-center space-x-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          <span>Restart OS</span>
-        </button>
-      </div>
-    </div>
-
   </div>
 
   <!-- ========================================== -->
-  <!-- 2. SYSTEM TASKBAR & SYSTEM TRAY           -->
+  <!-- 1. DESKTOP CANVAS                          -->
   <!-- ========================================== -->
-  <div id="taskbar" class="fixed bottom-0 left-0 right-0 h-14 bg-gray-950/80 backdrop-blur-2xl border-t border-white/10 flex items-center justify-between px-4 z-40">
+  <main id="desktop" class="relative w-full h-full">
     
-    <!-- Left Section: Start Button & App Launcher Indicators -->
-    <div class="flex items-center space-x-3">
-      <button onclick="CarbonOS.toggleStartMenu()" class="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 hover:opacity-90 transition-all shadow-lg active:scale-95">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+    <!-- Desktop Shortcuts -->
+    <div id="desktop-icons" class="p-4 grid grid-cols-1 gap-6 w-32">
+      <div class="desktop-shortcut flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer" onclick="CarbonOS.openApp('filemanager')">
+        <div class="icon-box bg-files shadow-lg">FS</div>
+        <span class="text-xs font-medium mt-1 text-center text-white drop-shadow">Files</span>
+      </div>
+
+      <div class="desktop-shortcut flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer" onclick="CarbonOS.openApp('texteditor')">
+        <div class="icon-box bg-notepad shadow-lg">TXT</div>
+        <span class="text-xs font-medium mt-1 text-center text-white drop-shadow">Notepad</span>
+      </div>
+
+      <div class="desktop-shortcut flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer" onclick="CarbonOS.openApp('calculator')">
+        <div class="icon-box bg-calc shadow-lg">123</div>
+        <span class="text-xs font-medium mt-1 text-center text-white drop-shadow">Calculator</span>
+      </div>
+
+      <div class="desktop-shortcut flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer" onclick="CarbonOS.openApp('terminal')">
+        <div class="icon-box bg-term shadow-lg">&gt;_</div>
+        <span class="text-xs font-medium mt-1 text-center text-white drop-shadow">Terminal</span>
+      </div>
+
+      <div class="desktop-shortcut flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer" onclick="CarbonOS.openApp('settings')">
+        <div class="icon-box bg-settings shadow-lg">SYS</div>
+        <span class="text-xs font-medium mt-1 text-center text-white drop-shadow">Settings</span>
+      </div>
+    </div>
+
+    <!-- Active Window Container -->
+    <div id="window-container" class="absolute inset-0 pointer-events-none"></div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- 2. START MENU                              -->
+  <!-- ========================================== -->
+  <div id="start-menu" class="hidden absolute bottom-14 left-3 w-80 bg-gray-900 rounded-2xl p-4 shadow-2xl z-40 animate__animated animate__fadeInUp animate__faster">
+    <div class="flex items-center gap-3 pb-3 border-b border-gray-700/50 mb-3">
+      <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-lg text-white">C</div>
+      <div>
+        <h4 class="text-sm font-semibold text-white">Carbon User</h4>
+        <p class="text-xs text-gray-400">Carbon OS v1.0</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 mb-3">
+      <button onclick="CarbonOS.openApp('filemanager')" class="flex flex-col items-center p-2 rounded-xl hover:bg-white/5">
+        <div class="icon-box icon-sm bg-files mb-1">FS</div>
+        <span class="text-[10px] text-gray-300">Files</span>
+      </button>
+      <button onclick="CarbonOS.openApp('texteditor')" class="flex flex-col items-center p-2 rounded-xl hover:bg-white/5">
+        <div class="icon-box icon-sm bg-notepad mb-1">TXT</div>
+        <span class="text-[10px] text-gray-300">Notepad</span>
+      </button>
+      <button onclick="CarbonOS.openApp('calculator')" class="flex flex-col items-center p-2 rounded-xl hover:bg-white/5">
+        <div class="icon-box icon-sm bg-calc mb-1">123</div>
+        <span class="text-[10px] text-gray-300">Calc</span>
+      </button>
+      <button onclick="CarbonOS.openApp('terminal')" class="flex flex-col items-center p-2 rounded-xl hover:bg-white/5">
+        <div class="icon-box icon-sm bg-term mb-1">&gt;_</div>
+        <span class="text-[10px] text-gray-300">Terminal</span>
+      </button>
+    </div>
+
+    <div class="pt-2 border-t border-gray-700/50 flex justify-between items-center">
+      <button onclick="CarbonOS.openApp('settings')" class="text-xs text-gray-400 hover:text-white">Settings</button>
+      <button onclick="location.reload()" class="text-xs text-red-400 hover:text-red-300">Restart</button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. TASKBAR                                 -->
+  <!-- ========================================== -->
+  <footer id="taskbar" class="absolute bottom-0 left-0 right-0 h-12 flex items-center justify-between px-3 z-30">
+    <div class="flex items-center gap-2">
+      <button id="start-btn" onclick="CarbonOS.toggleStartMenu()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+        START
       </button>
 
-      <!-- Active Apps Taskbar Dock -->
-      <div id="taskbar-apps" class="flex items-center space-x-2 border-l border-white/10 pl-3">
-        <!-- Injected via JavaScript -->
-      </div>
+      <div id="running-apps" class="flex items-center gap-1 pl-2 border-l border-gray-800"></div>
     </div>
 
-    <!-- Right Section: System Tray & Live Clock -->
-    <div class="flex items-center space-x-4 text-xs font-medium text-gray-300">
-      <div id="system-clock" class="text-right flex flex-col leading-tight">
-        <span id="clock-time" class="text-sm font-semibold text-white">12:00 PM</span>
-        <span id="clock-date" class="text-[10px] text-gray-400">Sep 17, 2026</span>
-      </div>
+    <div class="flex items-center gap-3 text-xs text-gray-300">
+      <div id="system-clock" class="font-medium tracking-wide">12:00 PM</div>
     </div>
-  </div>
+  </footer>
 
-  <!-- JavaScript Modules -->
-  <script src="js/storage.js"></script>
-  <script src="js/os-core.js"></script>
-  <script src="apps/calculator.js"></script>
-  <script src="apps/texteditor.js"></script>
-  <script src="apps/terminal.js"></script>
+  <!-- ========================================== -->
+  <!-- 4. CORE ENGINE                             -->
+  <!-- ========================================== -->
+  <script>
+    class CarbonStorage {
+      constructor() {
+        this.KEY = 'CARBON_OS_VFS';
+        if (!localStorage.getItem(this.KEY)) {
+          localStorage.setItem(this.KEY, JSON.stringify({
+            'welcome.txt': 'Welcome to Carbon OS!\nSaved using local web storage.'
+          }));
+        }
+      }
+      readFile(filename) {
+        const data = JSON.parse(localStorage.getItem(this.KEY) || '{}');
+        return data[filename] !== undefined ? data[filename] : null;
+      }
+      saveFile(filename, content) {
+        const data = JSON.parse(localStorage.getItem(this.KEY) || '{}');
+        data[filename] = content;
+        localStorage.setItem(this.KEY, JSON.stringify(data));
+        return true;
+      }
+      listFiles() {
+        return Object.keys(JSON.parse(localStorage.getItem(this.KEY) || '{}'));
+      }
+    }
+    const carbonStorage = new CarbonStorage();
+
+    class CarbonCore {
+      constructor() {
+        this.windows = {};
+        this.activeWindowId = null;
+        this.highestZIndex = 100;
+        this.dragTarget = null;
+        this.dragOffset = { x: 0, y: 0 };
+        this.init();
+      }
+
+      init() {
+        document.addEventListener("DOMContentLoaded", () => {
+          this.initClock();
+          this.setupDragListeners();
+          this.runBootSequence();
+        });
+      }
+
+      runBootSequence() {
+        setTimeout(() => {
+          const bar = document.getElementById("boot-progress");
+          if (bar) bar.style.width = "100%";
+        }, 100);
+
+        setTimeout(() => {
+          const overlay = document.getElementById("boot-screen");
+          if (overlay) {
+            overlay.style.opacity = "0";
+            setTimeout(() => overlay.remove(), 1000);
+          }
+        }, 1200);
+      }
+
+      initClock() {
+        const update = () => {
+          const clock = document.getElementById("system-clock");
+          if (clock) clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+        update();
+        setInterval(update, 1000);
+      }
+
+      toggleStartMenu() {
+        document.getElementById("start-menu").classList.toggle("hidden");
+      }
+
+      openApp(appId) {
+        document.getElementById("start-menu").classList.add("hidden");
+
+        if (this.windows[appId]) {
+          this.restoreWindow(appId);
+          this.focusWindow(appId);
+          return;
+        }
+
+        const appConfigs = {
+          filemanager: { title: "Files", iconTag: "FS", iconBg: "bg-files", w: 520, h: 360 },
+          texteditor: { title: "Notepad", iconTag: "TXT", iconBg: "bg-notepad", w: 520, h: 380 },
+          calculator: { title: "Calculator", iconTag: "123", iconBg: "bg-calc", w: 300, h: 400 },
+          terminal: { title: "Terminal", iconTag: ">_", iconBg: "bg-term", w: 540, h: 340 },
+          settings: { title: "Settings", iconTag: "SYS", iconBg: "bg-settings", w: 460, h: 320 }
+        };
+
+        const config = appConfigs[appId] || { title: appId, iconTag: "APP", iconBg: "bg-indigo-600", w: 450, h: 350 };
+
+        const win = document.createElement("div");
+        win.id = `win-${appId}`;
+        win.className = "carbon-window active animate__animated animate__zoomIn animate__faster";
+        win.style.width = `${config.w}px`;
+        win.style.height = `${config.h}px`;
+        win.style.left = `${Math.max(30, Math.random() * (window.innerWidth - config.w - 80))}px`;
+        win.style.top = `${Math.max(30, Math.random() * (window.innerHeight - config.h - 80))}px`;
+        win.style.zIndex = ++this.highestZIndex;
+
+        win.innerHTML = `
+          <div class="window-header" onmousedown="CarbonOS.startDrag(event, '${appId}')">
+            <div class="flex items-center gap-2 text-xs font-semibold text-white">
+              <span class="px-1.5 py-0.5 rounded text-[10px] ${config.iconBg}">${config.iconTag}</span>
+              <span>${config.title}</span>
+            </div>
+            <div class="window-controls">
+              <button class="window-control-btn btn-minimize" onclick="CarbonOS.minimizeWindow('${appId}')"></button>
+              <button class="window-control-btn btn-maximize" onclick="CarbonOS.maximizeWindow('${appId}')"></button>
+              <button class="window-control-btn btn-close" onclick="CarbonOS.closeWindow('${appId}')"></button>
+            </div>
+          </div>
+          <div class="window-body" id="body-${appId}"></div>
+        `;
+
+        win.addEventListener("mousedown", () => this.focusWindow(appId));
+        document.getElementById("window-container").appendChild(win);
+
+        this.windows[appId] = { element: win, isMaximized: false, isMinimized: false };
+        this.focusWindow(appId);
+        this.addTaskbarIcon(appId, config);
+        this.renderAppContent(appId, `body-${appId}`);
+      }
+
+      focusWindow(appId) {
+        if (!this.windows[appId]) return;
+        Object.keys(this.windows).forEach(id => this.windows[id].element.classList.remove("active"));
+        const target = this.windows[appId].element;
+        target.classList.add("active");
+        target.style.zIndex = ++this.highestZIndex;
+        this.activeWindowId = appId;
+      }
+
+      minimizeWindow(appId) {
+        if (!this.windows[appId]) return;
+        this.windows[appId].element.classList.add("minimized");
+        this.windows[appId].isMinimized = true;
+      }
+
+      restoreWindow(appId) {
+        if (!this.windows[appId]) return;
+        this.windows[appId].element.classList.remove("minimized");
+        this.windows[appId].isMinimized = false;
+      }
+
+      maximizeWindow(appId) {
+        const win = this.windows[appId];
+        if (!win) return;
+        if (win.isMaximized) {
+          win.element.style.top = win.oldTop; win.element.style.left = win.oldLeft;
+          win.element.style.width = win.oldWidth; win.element.style.height = win.oldHeight;
+          win.isMaximized = false;
+        } else {
+          win.oldTop = win.element.style.top; win.oldLeft = win.element.style.left;
+          win.oldWidth = win.element.style.width; win.oldHeight = win.element.style.height;
+          win.element.style.top = "0px"; win.element.style.left = "0px";
+          win.element.style.width = "100vw"; win.element.style.height = "calc(100vh - 48px)";
+          win.isMaximized = true;
+        }
+      }
+
+      closeWindow(appId) {
+        if (!this.windows[appId]) return;
+        this.windows[appId].element.remove();
+        delete this.windows[appId];
+        const taskBtn = document.getElementById(`task-${appId}`);
+        if (taskBtn) taskBtn.remove();
+      }
+
+      startDrag(e, appId) {
+        if (this.windows[appId].isMaximized) return;
+        this.dragTarget = this.windows[appId].element;
+        this.dragOffset.x = e.clientX - this.dragTarget.offsetLeft;
+        this.dragOffset.y = e.clientY - this.dragTarget.offsetTop;
+        this.focusWindow(appId);
+      }
+
+      setupDragListeners() {
+        document.addEventListener("mousemove", (e) => {
+          if (this.dragTarget) {
+            this.dragTarget.style.left = `${e.clientX - this.dragOffset.x}px`;
+            this.dragTarget.style.top = `${e.clientY - this.dragOffset.y}px`;
+          }
+        });
+        document.addEventListener("mouseup", () => { this.dragTarget = null; });
+      }
+
+      addTaskbarIcon(appId, config) {
+        const container = document.getElementById("running-apps");
+        if (document.getElementById(`task-${appId}`)) return;
+
+        const btn = document.createElement("button");
+        btn.id = `task-${appId}`;
+        btn.className = "px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition flex items-center gap-1.5";
+        btn.innerHTML = `<span class="px-1 py-0.2 rounded text-[9px] ${config.iconBg}">${config.iconTag}</span> ${config.title}`;
+        btn.onclick = () => {
+          if (this.windows[appId].isMinimized) {
+            this.restoreWindow(appId);
+            this.focusWindow(appId);
+          } else if (this.activeWindowId === appId) {
+            this.minimizeWindow(appId);
+          } else {
+            this.focusWindow(appId);
+          }
+        };
+        container.appendChild(btn);
+      }
+
+      renderAppContent(appId, targetId) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+
+        if (appId === 'calculator') {
+          el.innerHTML = `
+            <div class="p-4 flex flex-col h-full bg-gray-950 text-white">
+              <div id="calc-display" class="mb-4 p-3 bg-gray-900 rounded-xl text-right text-2xl font-mono text-indigo-400 truncate">0</div>
+              <div class="calc-grid flex-1">
+                <button class="calc-btn text-red-400" onclick="CarbonCalc.clear()">C</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('/')">÷</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('*')">×</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('-')">-</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('7')">7</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('8')">8</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('9')">9</button>
+                <button class="calc-btn accent" onclick="CarbonCalc.append('+')">+</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('4')">4</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('5')">5</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('6')">6</button>
+                <button class="calc-btn bg-emerald-600 col-span-1" onclick="CarbonCalc.calc()">=</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('1')">1</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('2')">2</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('3')">3</button>
+                <button class="calc-btn" onclick="CarbonCalc.append('0')">0</button>
+              </div>
+            </div>
+          `;
+        } else if (appId === 'texteditor') {
+          const val = carbonStorage.readFile('welcome.txt') || '';
+          el.innerHTML = `
+            <div class="flex flex-col h-full bg-gray-950">
+              <div class="flex items-center gap-2 p-2 bg-gray-900 border-b border-gray-800">
+                <input id="note-file" value="welcome.txt" class="bg-gray-800 text-xs px-2 py-1 rounded text-white border border-gray-700">
+                <button onclick="CarbonNotepad.save()" class="bg-indigo-600 text-xs px-3 py-1 rounded text-white">Save</button>
+              </div>
+              <textarea id="note-text" class="flex-1 p-3 bg-gray-950 text-white font-mono text-xs resize-none focus:outline-none border-none">${val}</textarea>
+            </div>
+          `;
+        } else if (appId === 'terminal') {
+          el.innerHTML = `
+            <div class="p-3 h-full bg-black text-green-400 font-mono text-xs overflow-auto flex flex-col">
+              <div id="term-out">Carbon OS Terminal v1.0<br>Type 'help' for commands.<br><br></div>
+              <div class="flex gap-2">
+                <span>carbon@os:~$</span>
+                <input id="term-in" class="bg-transparent text-green-400 outline-none flex-1 border-none font-mono" onkeydown="if(event.key==='Enter') CarbonTerm.exec()">
+              </div>
+            </div>
+          `;
+        } else if (appId === 'filemanager') {
+          const files = carbonStorage.listFiles();
+          el.innerHTML = `
+            <div class="p-4 bg-gray-950 h-full text-white text-xs">
+              <h3 class="text-sm font-semibold mb-3 text-indigo-400">Virtual File Directory</h3>
+              <div class="grid grid-cols-2 gap-2">
+                ${files.map(f => `<div class="p-2 bg-gray-900 rounded border border-gray-800 flex items-center gap-2"><span class="px-1.5 py-0.5 rounded text-[10px] bg-files">TXT</span> ${f}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        } else if (appId === 'settings') {
+          el.innerHTML = `
+            <div class="p-4 bg-gray-950 h-full text-white text-xs">
+              <h3 class="text-sm font-semibold mb-3">Background Themes</h3>
+              <div class="flex gap-2">
+                <button onclick="document.getElementById('desktop').style.background='linear-gradient(135deg, #0f172a, #1e1b4b)'" class="p-2 bg-indigo-900 rounded border border-indigo-700">Indigo Dark</button>
+                <button onclick="document.getElementById('desktop').style.background='linear-gradient(135deg, #064e3b, #022c22)'" class="p-2 bg-emerald-900 rounded border border-emerald-700">Emerald Dark</button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    window.CarbonOS = new CarbonCore();
+
+    window.CarbonCalc = {
+      val: "0",
+      append(c) { this.val = this.val === "0" ? c : this.val + c; document.getElementById("calc-display").textContent = this.val; },
+      clear() { this.val = "0"; document.getElementById("calc-display").textContent = "0"; },
+      calc() { try { this.val = String(eval(this.val)); } catch(e) { this.val = "Error"; } document.getElementById("calc-display").textContent = this.val; }
+    };
+
+    window.CarbonNotepad = {
+      save() {
+        const f = document.getElementById("note-file").value;
+        const t = document.getElementById("note-text").value;
+        carbonStorage.saveFile(f, t);
+        alert(`Saved ${f} successfully!`);
+      }
+    };
+
+    window.CarbonTerm = {
+      exec() {
+        const inp = document.getElementById("term-in");
+        const out = document.getElementById("term-out");
+        const cmd = inp.value.trim();
+        out.innerHTML += `carbon@os:~$ ${cmd}<br>`;
+        if (cmd === 'help') out.innerHTML += `Available commands: help, clear, ver, ls<br>`;
+        else if (cmd === 'clear') out.innerHTML = '';
+        else if (cmd === 'ver') out.innerHTML += `Carbon OS [Version 1.0.0]<br>`;
+        else if (cmd === 'ls') out.innerHTML += `${carbonStorage.listFiles().join('  ')}<br>`;
+        else if (cmd !== '') out.innerHTML += `Command not recognized: ${cmd}<br>`;
+        inp.value = '';
+      }
+    };
+  </script>
 </body>
 </html>
